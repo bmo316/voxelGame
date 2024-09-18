@@ -1,0 +1,45 @@
+{
+  "blocks": [
+    {
+      "blockID": 1,
+      "name": "Stone",
+      "destroyTime": 1.5,
+      "durability": 30,
+      "resistance": 15,
+      "textures": [
+        "res/textures/Stone.png",
+        "res/textures/Stone.png",
+        "res/textures/Stone.png",
+        "res/textures/Stone.png",
+        "res/textures/Stone.png",
+        "res/textures/Stone.png"
+      ],
+      "isSolid": true
+    },
+    {
+      "blockID": 2,
+      "name": "Dirt",
+      "destroyTime": 0.75,
+      "durability": 10,
+      "resistance": 5,
+      "textures": [
+        "res/textures/Dirt.png",
+        "res/textures/Dirt.png",
+        "res/textures/Dirt.png",
+        "res/textures/Dirt.png",
+        "res/textures/Dirt.png",
+        "res/textures/Dirt.png"
+      ],
+      "isSolid": true
+    },
+    {
+      "blockID": 0,
+      "name": "Air",
+      "destroyTime": 0.0,
+      "durability": 0,
+      "resistance": 0,
+      "textures": ["", "", "", "", "", ""],
+      "isSolid": false
+    }
+  ]
+}
