@@ -15,13 +15,13 @@ public class Chunk {
         for (int x = 0; x < CHUNK_SIZE; x++) {
             for (int y = 0; y < CHUNK_SIZE; y++) {
                 for (int z = 0; z < CHUNK_SIZE; z++) {
-                    if (y < 5) { 
+                    if (y < 12) { 
                         // Below y = 12, fill with stone
                         voxels[x][y][z] = new Voxel(1); // Block ID 1 for stone
-                    } else if (y >= 5 && y < 7) {
+                    } else if (y >= 12 && y < 15) {
                         // Between y = 12 and y = 14, fill with dirt
                         voxels[x][y][z] = new Voxel(2); // Block ID 2 for dirt
-                    } else if (y == 7) {
+                    } else if (y == 15) {
                         // At y = 15, place grass
                         voxels[x][y][z] = new Voxel(3); // Block ID 3 for grass
                     } else {
@@ -78,4 +78,9 @@ public class Chunk {
         chunkMesh = new ChunkMesh(this); // Rebuild the mesh with the current voxel data
         return chunkMesh;
     }
+
+	public Chunk getNeighboringChunk(int nx, int ny, int nz) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

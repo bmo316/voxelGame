@@ -86,11 +86,11 @@ public class Block_Types {
         }, true, "Dirt");
         
         new Block_Types(3, 0.75f, 10, 5, new String[]{ 
+                "res/textures/GrassTop.png",
                 "res/textures/GrassTop.png", 
+                "res/textures/GrassTop.png", 
+                "res/textures/GrassTop.png",  
                 "res/textures/Dirt.png",
-                "res/textures/GrassTop.png", 
-                "res/textures/GrassTop.png", 
-                "res/textures/GrassTop.png", 
                 "res/textures/GrassTop.png"
             }, true, "Grass");
         

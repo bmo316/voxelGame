@@ -113,94 +113,112 @@ public class Camera {
 
     // Improved raycast to delete a block
     private void deleteBlock(Chunk chunk) {
-        Vector3f rayDirection = getViewDirection();
+        Vector3f rayDirection = getViewDirection().normalize(); // Ensure direction is normalized
         Vector3f rayStart = new Vector3f(position);
+        Vector3f rayStep = new Vector3f();
 
-        for (float i = 0; i < reachDistance; i += 0.05f) { // Smaller step size for higher precision
-            Vector3f rayStep = new Vector3f(rayDirection).mul(i).add(rayStart);
+        for (float i = 0; i < reachDistance; i += 0.01f) { // Smaller step size for higher precision
+            // Compute the current step along the ray
+            rayStep.set(rayDirection).mul(i).add(rayStart);
+
+            // Convert to voxel coordinates
             int x = (int) Math.floor(rayStep.x);
             int y = (int) Math.floor(rayStep.y);
             int z = (int) Math.floor(rayStep.z);
 
-            // Check if the block to delete is within chunk bounds
-            if (x < 0 || x >= Chunk.getChunkSize() || y < 0 || y >= Chunk.getChunkSize() || z < 0 || z >= Chunk.getChunkSize()) {
-                continue; // Skip out-of-bounds
-            }
+            // Check if the voxel is within chunk bounds
+            if (x >= 0 && x < Chunk.getChunkSize() && y >= 0 && y < Chunk.getChunkSize() && z >= 0 && z < Chunk.getChunkSize()) {
+                Voxel voxel = chunk.getVoxel(x, y, z);
 
-            if (chunk.getVoxel(x, y, z) != null && chunk.getVoxel(x, y, z).isSolid()) {
-                // Remove the voxel
-                System.out.println("Voxel ID Removed = " + chunk.getVoxel(x, y, z).getBlockID() + "Voxel Coords = " + x + " " + y + " " + z);
-                chunk.setVoxel(x, y, z, Voxel.AIR);
+                // If the voxel is solid, delete it
+                if (voxel != null && voxel.isSolid()) {
+                    System.out.println("Voxel ID Removed = " + voxel.getBlockID() + " Voxel Coords = " + x + " " + y + " " + z);
+                    chunk.setVoxel(x, y, z, Voxel.AIR); // Set to air (assuming Voxel.AIR is the empty state)
 
-                // Update this voxel and its neighbors in the chunk mesh
-                updateNeighboringBlocks(chunk, x, y, z);
-
-                break; // Stop at the first solid block
+                    // Update this voxel and its neighbors in the chunk mesh
+                    //updateNeighboringBlocks(chunk, x, y, z);
+                    break; // Stop after deleting the block
+                }
             }
         }
     }
 
     // Improved raycast to add a block
     private void addBlock(Chunk chunk) {
-        Vector3f rayDirection = getViewDirection();
+        Vector3f rayDirection = getViewDirection().normalize(); // Ensure direction is normalized
         Vector3f rayStart = new Vector3f(position);
-        Vector3f currentPosition = new Vector3f(rayStart);
+        Vector3f rayStep = new Vector3f();
+        Vector3f lastAirPosition = new Vector3f();
 
-        for (float i = 0; i < reachDistance; i += 0.1f) {
-            currentPosition.set(rayStart).fma(i, rayDirection);
-            int x = Math.round(currentPosition.x);
-            int y = Math.round(currentPosition.y);
-            int z = Math.round(currentPosition.z);
+        for (float i = 0; i < reachDistance; i += 0.01f) { // Smaller step size for higher precision
+            // Compute the current step along the ray
+            rayStep.set(rayDirection).mul(i).add(rayStart);
 
-            // Ensure we are within chunk bounds
-            if (x < 0 || x >= Chunk.getChunkSize() || z < 0 || z >= Chunk.getChunkSize() || y < 0 || y >= Chunk.getChunkSize()) {
-                continue; // Skip out-of-bounds
-            }
+            // Convert to voxel coordinates
+            int x = (int) Math.floor(rayStep.x);
+            int y = (int) Math.floor(rayStep.y);
+            int z = (int) Math.floor(rayStep.z);
 
-            if (chunk.getVoxel(x, y, z) != null && chunk.getVoxel(x, y, z).isSolid()) {
-                // Calculate the position for placing the new block
-                int addX = Math.round(currentPosition.x - rayDirection.x * 0.1f);
-                int addY = Math.round(currentPosition.y - rayDirection.y * 0.1f);
-                int addZ = Math.round(currentPosition.z - rayDirection.z * 0.1f);
+            // Check if the voxel is within chunk bounds
+            if (x >= 0 && x < Chunk.getChunkSize() && y >= 0 && y < Chunk.getChunkSize() && z >= 0 && z < Chunk.getChunkSize()) {
+                Voxel voxel = chunk.getVoxel(x, y, z);
 
-                // Ensure we are within chunk bounds
-                if (addX < 0 || addX >= Chunk.getChunkSize() || addZ < 0 || addZ >= Chunk.getChunkSize() || addY < 0 || addY >= Chunk.getChunkSize()) {
-                    continue; // Skip out-of-bounds
+                // Track the last air position before hitting a solid voxel
+                if (voxel != null && !voxel.isSolid()) {
+                    lastAirPosition.set(x, y, z);
                 }
 
-                // Check if the target voxel is air (empty space)
-                if (chunk.getVoxel(addX, addY, addZ).getBlockID() == 0) { // Block ID 0 for air
-                    chunk.setVoxel(addX, addY, addZ, new Voxel(4)); // Use block ID 4 for the new block
-                    updateNeighboringBlocks(chunk, addX, addY, addZ);
+                // If the voxel is solid, place a block at the last air position
+                if (voxel != null && voxel.isSolid()) {
+                    int addX = (int) lastAirPosition.x;
+                    int addY = (int) lastAirPosition.y;
+                    int addZ = (int) lastAirPosition.z;
+
+                    // Ensure we are within chunk bounds
+                    if (addX >= 0 && addX < Chunk.getChunkSize() && addY >= 0 && addY < Chunk.getChunkSize() && addZ >= 0 && addZ < Chunk.getChunkSize()) {
+                        if (chunk.getVoxel(addX, addY, addZ).getBlockID() == 0) { // Check if it's air
+                            chunk.setVoxel(addX, addY, addZ, new Voxel(2)); // Place the block (ID 4)
+                            //updateNeighboringBlocks(chunk, addX, addY, addZ);
+                            System.out.println("Voxel ID Set = 2 at Voxel Coords = " + addX + " " + addY + " " + addZ);
+                        }
+                    }
                     break; // Stop after placing the block
                 }
             }
         }
     }
+
     // Update the visibility of neighboring blocks' faces after placing a block
     private void updateNeighboringBlocks(Chunk chunk, int x, int y, int z) {
-        // Update the mesh for the changed block and its immediate neighbors
+        // Offsets for the 6 cardinal neighbors in 3D space
         int[][] neighbors = {
-            {1, 0, 0}, {-1, 0, 0},
-            {0, 1, 0}, {0, -1, 0},
-            {0, 0, 1}, {0, 0, -1}
+            {1, 0, 0}, // Positive X
+            {-1, 0, 0}, // Negative X
+            {0, 1, 0}, // Positive Y
+            {0, -1, 0}, // Negative Y
+            {0, 0, 1}, // Positive Z
+            {0, 0, -1} // Negative Z
         };
 
+        // Update the block itself first
+        if (x >= 0 && x < Chunk.getChunkSize() && y >= 0 && y < Chunk.getChunkSize() && z >= 0 && z < Chunk.getChunkSize()) {
+            chunk.getChunkMesh().updateVoxel(chunk, x, y, z, chunk.getVoxel(x, y, z).getBlockID());
+        }
+
+        // Update the mesh for each immediate neighbor
         for (int[] offset : neighbors) {
             int nx = x + offset[0];
             int ny = y + offset[1];
             int nz = z + offset[2];
 
-            // Ensure we are within chunk bounds
+            // Ensure the neighbor is within chunk bounds
             if (nx >= 0 && nx < Chunk.getChunkSize() && ny >= 0 && ny < Chunk.getChunkSize() && nz >= 0 && nz < Chunk.getChunkSize()) {
                 // Update the chunk mesh for the neighbor
                 chunk.getChunkMesh().updateVoxel(chunk, nx, ny, nz, chunk.getVoxel(nx, ny, nz).getBlockID());
             }
         }
-
-        // Update the mesh for the block itself
-        chunk.getChunkMesh().updateVoxel(chunk, x, y, z, chunk.getVoxel(x, y, z).getBlockID());
     }
+
 
     // Get the direction the camera is facing
     private Vector3f getViewDirection() {
